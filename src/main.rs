@@ -57,7 +57,10 @@ async fn insert_item(connection: SQLiteConnection) -> String {
 async fn reset_db(connection: SQLiteConnection) -> String {
     let reset_res = connection
         .connection
-        .execute("CREATE TABLE test_request (row_id INTEGER PRIMARY KEY, message TEXT);");
+        .execute("
+            DROP TABLE IF EXISTS test_request;
+            CREATE TABLE test_request (row_id INTEGER PRIMARY KEY, message TEXT);
+        ");
     match reset_res {
         Ok(_) => String::from("reset done"),
         Err(err) => {
