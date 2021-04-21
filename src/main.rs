@@ -1,11 +1,29 @@
 mod sqlite_connection;
-use sqlite::Error;
+use sqlite::{Error as ErrorSQLite};
 use sqlite_connection::{download_db, upload_db, SQLiteConnection};
+use rocket::http::Status;
+use rocket::response::status;
 
 #[macro_use]
 extern crate rocket;
 
-fn do_get_count(connection: &SQLiteConnection) -> Result<String, Error> {
+struct SQLiteError(ErrorSQLite);
+
+impl From<ErrorSQLite> for SQLiteError {
+    fn from(error: ErrorSQLite) -> Self {
+        SQLiteError(error)
+    }
+}
+
+impl From<SQLiteError> for status::Custom<String> {
+    fn from(error: SQLiteError) -> Self {
+        let error_message = error.0.message
+            .unwrap_or(String::from("database error"));
+        status::Custom(Status::InternalServerError, error_message)
+    }
+}
+
+fn do_get_count(connection: &SQLiteConnection) -> Result<String, SQLiteError> {
     let mut statement = connection
         .connection
         .prepare("SELECT row_id FROM test_request ORDER BY row_id DESC LIMIT 1;")?;
@@ -18,18 +36,12 @@ fn do_get_count(connection: &SQLiteConnection) -> Result<String, Error> {
  * Fetch current row count, or no it actually returns the max value of an auto incrementing integer key
  */
 #[get("/")]
-async fn get_count(connection: SQLiteConnection) -> String {
-    match do_get_count(&connection) {
-        Ok(res) => res,
-        Err(err) => {
-            println!("{:?}", err);
-            err.message
-                .unwrap_or(String::from("failed to get item count"))
-        }
-    }
+async fn get_count(connection: SQLiteConnection) -> Result<String, status::Custom<String>> {
+    let count = do_get_count(&connection)?;
+    Ok(count)
 }
 
-fn do_insert(connection: &SQLiteConnection, _message: String) -> Result<(), Error> {
+fn do_insert(connection: &SQLiteConnection, _message: String) -> Result<(), SQLiteError> {
     connection
         .connection
         .execute("INSERT INTO test_request VALUES (NULL, 'TODO insert a string instead!');")?;
@@ -40,21 +52,16 @@ fn do_insert(connection: &SQLiteConnection, _message: String) -> Result<(), Erro
  * Insert item into database
  */
 #[post("/")]
-async fn insert_item(connection: SQLiteConnection) -> String {
-    match do_insert(&connection, String::from("message")) {
-        Ok(_) => String::from("insert done"),
-        Err(err) => {
-            println!("{:?}", err);
-            err.message.unwrap_or(String::from("failed to insert item"))
-        }
-    }
+async fn insert_item(connection: SQLiteConnection) -> Result<String, status::Custom<String>> {
+    do_insert(&connection, String::from("message"))?;
+    Ok(String::from("item inserted"))
 }
 
 /**
  *
  */
 #[post("/reset")]
-async fn reset_db(connection: SQLiteConnection) -> String {
+async fn reset_db(connection: SQLiteConnection) -> Result<String, status::Custom<String>> {
     let reset_res = connection
         .connection
         .execute("
@@ -62,12 +69,8 @@ async fn reset_db(connection: SQLiteConnection) -> String {
             CREATE TABLE test_request (row_id INTEGER PRIMARY KEY, message TEXT);
         ");
     match reset_res {
-        Ok(_) => String::from("reset done"),
-        Err(err) => {
-            println!("{:?}", err);
-            err.message
-                .unwrap_or(String::from("failed to execute statement"))
-        }
+        Ok(_) => Ok(String::from("reset done")),
+        Err(err) => Err(SQLiteError(err).into()),
     }
 }
 
