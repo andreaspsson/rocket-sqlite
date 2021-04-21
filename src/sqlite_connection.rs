@@ -12,7 +12,9 @@ pub struct SQLiteConnection {
     pub connection: Connection,
 }
 
-static DB_PATH: &str = "/tmp/test-db.db";
+static DB_STORAGE_NAME: &str = "test-db.db";
+static DB_STORAGE_BUCKET: &str = "sqlite-test";
+static DB_FILE_LOCATION: &str = "/tmp/test-db.db";
 
 #[derive(Error, Debug)]
 pub enum SQLiteConnectionError {
@@ -27,13 +29,13 @@ pub enum SQLiteConnectionError {
 // TODO - stream upload instad of readin full file into memory
 pub async fn upload_db() -> Result<(), SQLiteConnectionError> {
     let mut bytes: Vec<u8> = Vec::new();
-    let mut file = File::open(DB_PATH)?;
+    let mut file = File::open(DB_FILE_LOCATION)?;
     file.read_to_end(&mut bytes)?;
 
     let client = Client::default();
     client
         .object()
-        .create("sqlite-test", bytes, "test-db.db", "binary/octet-stream")
+        .create(DB_STORAGE_BUCKET, bytes, DB_STORAGE_NAME, "binary/octet-stream")
         .await?;
     Ok(())
 }
@@ -42,9 +44,9 @@ pub async fn download_db() -> Result<(), SQLiteConnectionError> {
     let client = Client::default();
     let mut stream = client
         .object()
-        .download_streamed("sqlite-test", "test-db.db")
+        .download_streamed(DB_STORAGE_BUCKET, DB_STORAGE_NAME)
         .await?;
-    let file = File::create(DB_PATH)?;
+    let file = File::create(DB_FILE_LOCATION)?;
     let mut file_writer = BufWriter::new(file);
 
     while let Some(byte) = stream.next().await {
@@ -58,7 +60,7 @@ impl<'r> FromRequest<'r> for SQLiteConnection {
     type Error = SQLiteConnectionError;
 
     async fn from_request(_req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match sqlite::open(DB_PATH) {
+        match sqlite::open(DB_FILE_LOCATION) {
             Ok(sqlte_connection) => Outcome::Success(SQLiteConnection {
                 connection: sqlte_connection,
             }),
