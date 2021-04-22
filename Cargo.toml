@@ -10,6 +10,7 @@ sqlite = "0.26.0"
 cloud-storage = "0.10"
 thiserror = "1.0.22"
 futures = "0.3"
+openssl = { version = "0.10", features = ["vendored"] }
 
 [dependencies.rocket_contrib]
 git = "https://github.com/SergioBenitez/Rocket"
