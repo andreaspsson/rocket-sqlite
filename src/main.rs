@@ -1,8 +1,8 @@
 mod sqlite_connection;
-use sqlite::{Error as ErrorSQLite};
-use sqlite_connection::{download_db, upload_db, SQLiteConnection};
 use rocket::http::Status;
 use rocket::response::status;
+use sqlite::Error as ErrorSQLite;
+use sqlite_connection::{download_db, upload_db, SQLiteConnection};
 
 #[macro_use]
 extern crate rocket;
@@ -17,8 +17,7 @@ impl From<ErrorSQLite> for SQLiteError {
 
 impl From<SQLiteError> for status::Custom<String> {
     fn from(error: SQLiteError) -> Self {
-        let error_message = error.0.message
-            .unwrap_or(String::from("database error"));
+        let error_message = error.0.message.unwrap_or(String::from("database error"));
         status::Custom(Status::InternalServerError, error_message)
     }
 }
@@ -62,12 +61,12 @@ async fn insert_item(connection: SQLiteConnection) -> Result<String, status::Cus
  */
 #[post("/reset")]
 async fn reset_db(connection: SQLiteConnection) -> Result<String, status::Custom<String>> {
-    let reset_res = connection
-        .connection
-        .execute("
+    let reset_res = connection.connection.execute(
+        "
             DROP TABLE IF EXISTS test_request;
             CREATE TABLE test_request (row_id INTEGER PRIMARY KEY, message TEXT);
-        ");
+        ",
+    );
     match reset_res {
         Ok(_) => Ok(String::from("reset done")),
         Err(err) => Err(SQLiteError(err).into()),

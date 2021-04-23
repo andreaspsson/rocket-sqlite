@@ -1148,6 +1148,7 @@ dependencies = [
  "cloud-storage",
  "futures",
  "openssl",
+ "reqwest",
  "rocket",
  "rocket_contrib",
  "sqlite",
