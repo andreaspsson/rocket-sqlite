@@ -54,7 +54,7 @@ cargo build $build_args --target=x86_64-unknown-linux-musl
 rm -rf target/docker || true
 mkdir target/docker
 cp target/x86_64-unknown-linux-musl/$profile/rocket-sqlite target/docker
-cp docker/Dockerfile target/docker
+cp docker/* target/docker
 docker build target/docker --tag "$DOCKER_HOST_NAME/$PROJECT_ID/rocket-sqlite:$build_version"
 
 # Push docker image

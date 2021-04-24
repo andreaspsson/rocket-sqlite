@@ -38,6 +38,10 @@ resource "google_cloud_run_service" "rocket-sqlite-test" {
           name = "BUCKET_NAME"
           value = var.bucket_name
         }
+        env {
+          name = "PROJECT_ID"
+          value = var.project_id
+        }
         resources {
           limits = {
             cpu = "2000m"
@@ -66,10 +70,45 @@ data "google_iam_policy" "noauth" {
   }
 }
 
+// Everyone shall be able to access the deployed function
 resource "google_cloud_run_service_iam_policy" "noauth" {
   location    = google_cloud_run_service.rocket-sqlite-test.location
   project     = google_cloud_run_service.rocket-sqlite-test.project
   service     = google_cloud_run_service.rocket-sqlite-test.name
 
   policy_data = data.google_iam_policy.noauth.policy_data
+}
+
+// The application need a service account key to be able to access cloud storage
+resource "google_secret_manager_secret" "rocket-sqlite-test-sa" {
+  provider = google-beta
+  secret_id = "rocket-sqlite-test-sa"
+  replication {
+    user_managed {
+      replicas {
+        location = "europe-west1"
+      }
+      replicas {
+        location = "europe-west4"
+      }
+      replicas {
+        location = "europe-north1"
+      }
+    }
+  }
+}
+
+data "google_iam_policy" "rocket-sqlite-test-sa" {
+  binding {
+    role = "roles/secretmanager.secretAccessor"
+    members = [
+      "serviceAccount:${google_service_account.rocket-sa.email}",
+    ]
+  }
+}
+
+resource "google_secret_manager_secret_iam_policy" "rocket-sqlite-test-sa" {
+  provider = google-beta
+  secret_id = google_secret_manager_secret.rocket-sqlite-test-sa.secret_id
+  policy_data = data.google_iam_policy.rocket-sqlite-test-sa.policy_data
 }
