@@ -1,12 +1,10 @@
 #!/bin/sh -e
 
+DOCKER_HOST_NAME=eu.gcr.io
+
 # Validate environment
 [ "$PROJECT_ID" ] || {
   echo "PROJECT_ID not set"
-  exit 1
-}
-[ "$DOCKER_HOST_NAME" ] || {
-  echo "DOCKER_HOST_NAME not set"
   exit 1
 }
 
