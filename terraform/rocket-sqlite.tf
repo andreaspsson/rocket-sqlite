@@ -29,6 +29,7 @@ resource "google_cloud_run_service" "rocket-sqlite-test" {
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale" = 1
+        "run.googleapis.com/sandbox"       = "gvisor"
       }
     }
     spec {
@@ -49,7 +50,7 @@ resource "google_cloud_run_service" "rocket-sqlite-test" {
           }
         }
       }
-      container_concurrency = 0
+      container_concurrency = 80
       service_account_name = google_service_account.rocket-sa.email
       timeout_seconds = 900
     }
