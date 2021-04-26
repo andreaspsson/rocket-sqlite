@@ -2,7 +2,7 @@ mod sqlite_connection;
 use rocket::http::Status;
 use rocket::response::status;
 use sqlite::Error as ErrorSQLite;
-use sqlite_connection::{download_db, upload_db, SQLiteConnection};
+use sqlite_connection::{SQLiteConnection};
 
 #[macro_use]
 extern crate rocket;
@@ -75,38 +75,16 @@ async fn reset_db(connection: SQLiteConnection) -> Result<String, status::Custom
 
 #[rocket::main]
 async fn main() {
-    // Download db file
-    match download_db().await {
-        Err(err) => {
-            println!("Error when downloading file {:?}", err);
-            panic!("Failed to download db file");
-        }
-        Ok(_) => {
-            println!("Download done!");
-        }
-    }
     // Launch server
     let rocket_res = rocket::build()
         .mount("/work", routes![get_count, insert_item])
         .mount("/config", routes![reset_db])
         .launch()
         .await;
-
-    println!("Closing down, fist upload db to storage...");
     match rocket_res {
         Err(err) => {
             println!("Error when closing down rocket {:?}", err);
         }
         _ => {} // All good, ignore
-    }
-    // Download db file
-    match upload_db().await {
-        Err(err) => {
-            println!("Error when downloading file {:?}", err);
-            panic!("Failed to upload db file");
-        }
-        _ => {
-            println!("Upload done done!");
-        }
     }
 }

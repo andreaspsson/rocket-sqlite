@@ -43,6 +43,10 @@ resource "google_cloud_run_service" "rocket-sqlite-test" {
           name = "PROJECT_ID"
           value = var.project_id
         }
+        env {
+          name = "BUILD_VERSION"
+          value = var.build_version
+        }
         resources {
           limits = {
             cpu = "2000m"

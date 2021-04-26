@@ -7,9 +7,7 @@ edition = "2018"
 [dependencies]
 rocket = { git ="https://github.com/SergioBenitez/Rocket" }
 sqlite = "0.26.0"
-cloud-storage = "0.10"
 thiserror = "1.0.22"
-futures = "0.3"
 openssl = { version = "0.10", features = ["vendored"] }
 reqwest = "0.11.3"
 
