@@ -49,11 +49,11 @@ build_args=
 cargo build $build_args --target=x86_64-unknown-linux-musl
 
 # Build docker image
-rm -rf target/docker || true
-mkdir target/docker
-cp target/x86_64-unknown-linux-musl/$profile/rocket-sqlite target/docker
-cp docker/* target/docker
-docker build target/docker --tag "$DOCKER_HOST_NAME/$PROJECT_ID/rocket-sqlite:$build_version"
+rm -rf target/cloud-run || true
+mkdir target/cloud-run
+cp target/x86_64-unknown-linux-musl/$profile/rocket-sqlite target/cloud-run
+cp deployment/resources/* target/cloud-run
+docker build target/cloud-run --tag "$DOCKER_HOST_NAME/$PROJECT_ID/rocket-sqlite:$build_version"
 
 # Push docker image
 docker push "$DOCKER_HOST_NAME/$PROJECT_ID/rocket-sqlite:$build_version"

@@ -1,14 +1,19 @@
 #!/bin/sh
 id=$(date +%s)
 echo "$id: Launching using $BUILD_VERSION"
-echo "$id: Validating environment"
+
+# alidate and configure environment
 if [ -z "$PROJECT_ID" ]; then
   echo "$id: Required evironment variable PROJECT_ID not found"
   exit 1
 fi
-
-echo "$id: Loading secrets"
-export SERVICE_ACCOUNT_JSON=$(gcloud secrets versions access latest --secret=rocket-sqlite-test-sa --project=$PROJECT_ID)
+export ROCKET_ADDRESS=0.0.0.0
+if [ "$PORT" ]; then
+  export ROCKET_PORT=$PORT
+else
+  # Use default port 8080
+  export ROCKET_PORT=8080
+fi
 
 # SQLite file management
 echo "$id: Download db file"

@@ -1,7 +1,7 @@
 #!/bin/sh -e
-[ -e .build-conf ] && {
+[ -e .build.conf ] && {
   echo "Loading conf from .build.conf"
-  source .build-conf
+  source .build.conf
 }
 
 # Generate version, used for tagging the image
@@ -13,4 +13,4 @@ echo "Building $version"
 
 # Apply terraform config
 echo "Apply changes to cloud env"
-./terraform/terraform.sh -v $version -c apply
+./deployment/terraform/terraform.sh -v $version -c apply
