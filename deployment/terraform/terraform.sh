@@ -37,5 +37,8 @@ shift $((OPTIND-1))
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd $DIR
 
+# Select workspace for the selected project
+terraform workspace select $PROJECT_ID || terraform workspace new $PROJECT_ID
+
 # Run terraform
 echo yes | terraform $command -input=false -var "project_id=$PROJECT_ID" -var "build_version=$build_version" -var "bucket_name=$BUCKET_NAME"
